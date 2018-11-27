@@ -1,12 +1,14 @@
 "use strict";
 
-var gulp = require("gulp"),
+let gulp = require("gulp"),
     concat = require("gulp-concat"),
     cssmin = require("gulp-cssmin"),
     uglify = require("gulp-uglify"),
     newer = require("gulp-newer"),
-    del = require('del');
+    del = require('del'),
+    PluginError = require('plugin-error');
 
+let PLUGIN_NAME = 'gulp-bunder';
 
 function CreateBundleList(bundleConfigs, bunderSettings, basePath) {
     return bundleConfigs.map(function (item) {
@@ -37,11 +39,11 @@ function ToBool(value) {
 
 function Bundle(config, bunderSettings, basePath) {
     if (!config) {
-        throw new Error("Bundle config paramater null.");
+        throw new PluginError(PLUGIN_NAME, "Bundle config paramater null.");
     }
 
     if (!config.Files || !config.Files.length) {
-        throw new Error("Bundle must have at least one file under Files reference.");
+        throw new PluginError(PLUGIN_NAME, "Bundle must have at least one file under Files reference.");
     }
 
     let _ext = /(?:\.([^.]+))?$/.exec(config.OutputFileName || config.Files[0])[1];
@@ -76,7 +78,7 @@ function Bundle(config, bunderSettings, basePath) {
             case "css":
                 return cssmin();
             default:
-                throw new Error("No support for file extension '" + this.Extension + "' on Minify action.");
+                throw new PluginError(PLUGIN_NAME, "No support for file extension '" + this.Extension + "' on Minify action.");
         }
     };
 
@@ -201,12 +203,26 @@ function Clean(dir) {
 }
 
 modules.exports = function(options) {
-    // get Bunder settings and bundle definitions from json config files
-    // TODO - transition options to these values
-    var bunderSettings = require("./appsettings.json").Bunder,
-        basePath = "./wwwroot/",
-        bundleConfigs = require("./" + bunderSettings.BundlesConfigFilePath),
-        newerOnly = true;
+    if (!options) {
+        throw new PluginError(PLUGIN_NAME, "Options object required.");
+    }
 
-    BundleFiles(CreateBundleList(bundleConfigs, bunderSettings, basePath), basePath, newerOnly);
+    if (!options.bunderSettings && !options.appSettingsJsonPath) {
+        throw new PluginError(PLUGIN_NAME, "Options values bunderSettings or appSettingsJsonPath required.")
+    }
+
+    if (!options.bunderSettings) {
+        //"./appsettings.json"
+        options.bunderSettings = require(options.appSettingsJsonPath).Bunder;
+    }
+
+    if (!options.basePath) {
+        options.basePath = "./";
+    }
+
+    let bundleConfigs = require("./" + bunderSettings.BundlesConfigFilePath);
+
+    BundleFiles(CreateBundleList(bundleConfigs, options.bunderSettings, options.basePath), 
+            options.basePath, 
+            ToBool(options.newerOnly));
 }
