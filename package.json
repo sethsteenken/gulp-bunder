@@ -1,0 +1,39 @@
+{
+  "name": "gulp-bunder",
+  "version": "1.0.0",
+  "description": "Bundle and minify static assets from json configuration",
+  "homepage": "https://github.com/sethsteenken/gulp-bunder",
+  "author": {
+    "name": "Seth Steenken",
+    "url": "https://github.com/sethsteenken"
+  },
+  "keywords": [
+    "bundling",
+    "minify",
+    "asset",
+    "web",
+    "gulp",
+    "gulpplugin",
+    "javascript",
+    "css",
+    "build",
+    "CI"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sethsteenken/gulp-bunder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sethsteenken/gulp-bunder/issues"
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "dependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-cssmin": "^0.2.0",
+    "gulp-uglify": "^3.0.1",
+    "gulp-newer": "^1.4.0",
+    "plugin-error": "^1.0.1"
+  }
+}
