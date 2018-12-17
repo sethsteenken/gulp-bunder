@@ -10,12 +10,6 @@ let gulp = require("gulp"),
 
 let PLUGIN_NAME = 'gulp-bunder';
 
-function CreateBundleList(bundleConfigs, bunderSettings, basePath) {
-    return bundleConfigs.map(function (item) {
-        return new Bundle(item, bunderSettings, basePath);
-    });
-}
-
 function ToBool(value) {
     if (value === undefined) {
         return false;
@@ -37,7 +31,7 @@ function ToBool(value) {
     }
 }
 
-function Bundle(config, bunderSettings, basePath) {
+function Bundle(config, bunderSettings, outputBasePath) {
     if (!config) {
         throw new PluginError(PLUGIN_NAME, "Bundle config paramater null.");
     }
@@ -46,20 +40,32 @@ function Bundle(config, bunderSettings, basePath) {
         throw new PluginError(PLUGIN_NAME, "Bundle must have at least one file under Files reference.");
     }
 
-    let _ext = /(?:\.([^.]+))?$/.exec(config.OutputFileName || config.Files[0])[1];
-    if (_ext) {
-        _ext = _ext.toLowerCase();
+    let _ext;
+    
+    for (let i = 0; i < config.Files.length; i++) {
+        _ext = /(?:\.([^.]+))?$/.exec(config.OutputFileName || config.Files[i])[1];
+        if (_ext) {
+            break;
+        }
     }
 
-    this.Extension = _ext;
+    if (!_ext) {
+        throw new PluginError(PLUGIN_NAME, "Extension not determined on bundle definition. Provide OutputFileName or at least one file in Files list with a valid file extension.");
+    }
+
+    console.log("config.OutputFileName", config.OutputFileName);
+    console.log("config.Files[0]", config.Files[0]);
+    console.log("_ext", _ext);
+
+    this.Extension = _ext.toLowerCase();
     this.Name = config.Name;
-    this.OutputFileName = config.Outputfilename || this.Name.replace(" ", "_") + ".min." + this.Extension;
-    this.SubPath = config.subpath || "";
-    this.Files = config.files;
-    this.OutputDirectory = config.outputdirectory || bunderSettings.OutputDirectories[this.Extension] || "";
+    this.OutputFileName = config.OutputFileName || this.Name.replace(" ", "_") + ".min." + this.Extension;
+    this.SubPath = config.SubPath || "";
+    this.Files = config.Files;
+    this.OutputDirectory = config.OutputDirectory || bunderSettings.OutputDirectories[this.Extension] || "";
 
     // build output path
-    let _outputPath = (basePath || "") + this.OutputDirectory + this.SubPath;
+    let _outputPath = (outputBasePath || "") + this.OutputDirectory + this.SubPath;
     if (_outputPath.slice(-1) != "/") {
         _outputPath += "/";
     }
@@ -91,7 +97,7 @@ function Bundle(config, bunderSettings, basePath) {
 }
 
 // recursively build out list of files in a bundle
-function BuildListOfFiles(bundle, bundlesList, basePath) {
+function BuildListOfFiles(bundle, bundlesList, sourceBasePath) {
     let bundleFiles = [];
 
     if (bundle && bundle.Files && bundle.Files.length) {
@@ -103,11 +109,11 @@ function BuildListOfFiles(bundle, bundlesList, basePath) {
             });
 
             if (existingBundle && existingBundle.length) {
-                bundleFiles = bundleFiles.concat(BuildListOfFiles(existingBundle[0], bundlesList, basePath));
+                bundleFiles = bundleFiles.concat(BuildListOfFiles(existingBundle[0], bundlesList, sourceBasePath));
             } else {
                 let file = bundle.Files[i];
-                if (basePath && basePath.length)
-                    file = basePath + file;
+                if (sourceBasePath && sourceBasePath.length)
+                    file = sourceBasePath + file;
                 bundleFiles.push(file);
             }
         }
@@ -127,6 +133,8 @@ function BundleFiles(bundles, basePath, newerOnly) {
 
         for (let i = 0; i < totalBundleCount; i++) {
             let bundle = bundles[i];
+            
+            console.log("bundle.Extension", bundle.Extension);
 
             if (ToBool(bundle.ReferenceOnly)) {
                 console.log("Bundle for " + bundle.Name + " is set to only be referenced. No bundling for this bundle.");
@@ -202,13 +210,13 @@ function Clean(dir) {
         });
 }
 
-modules.exports = function(options) {
+module.exports = function(options) {
     if (!options) {
         throw new PluginError(PLUGIN_NAME, "Options object required.");
     }
 
     if (!options.bunderSettings && !options.appSettingsJsonPath) {
-        throw new PluginError(PLUGIN_NAME, "Options values bunderSettings or appSettingsJsonPath required.")
+        throw new PluginError(PLUGIN_NAME, "Options values bunderSettings or appSettingsJsonPath required.");
     }
 
     if (!options.bunderSettings) {
@@ -220,9 +228,10 @@ modules.exports = function(options) {
         options.basePath = "./";
     }
 
-    let bundleConfigs = require("./" + bunderSettings.BundlesConfigFilePath);
+    let bundleConfigs = require(options.bunderSettings.BundlesConfigFilePath),
+        bundles = bundleConfigs.map(function (item) {
+            return new Bundle(item, options.bunderSettings, options.basePath);
+        });
 
-    BundleFiles(CreateBundleList(bundleConfigs, options.bunderSettings, options.basePath), 
-            options.basePath, 
-            ToBool(options.newerOnly));
+    BundleFiles(bundles, options.basePath, ToBool(options.newerOnly));
 }

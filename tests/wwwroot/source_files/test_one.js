@@ -1,0 +1,10 @@
+﻿(function () {
+
+    // comments
+    alert("one");
+
+
+
+
+
+})();

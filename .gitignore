@@ -59,3 +59,12 @@ typings/
 
 # next.js build output
 .next
+
+.vs/ProjectSettings.json
+.vs/VSWorkspaceState.json
+.vs/slnx.sqlite
+.vs/config/applicationhost.config
+.vs/gulp-bunder/v15/.suo
+.vscode/launch.json
+tests/wwwroot/output/css
+tests/wwwroot/output/js

@@ -1,0 +1,36 @@
+[
+    {
+      "Name": "style-bundle",
+      "Files": [
+        "source_files/styles.css"
+      ]
+    },
+    {
+      "Name": "my-bundle-one",
+      "Files": [
+        "source_files/test_one.js",
+        "source_files/test_two.js"
+      ]
+    },
+    {
+      "Name": "my-bundle-two",
+      "Files": [
+        "source_files/test_one.js",
+        "source_files/test_two.js",
+        "source_files/test_three.js"
+      ]
+    },
+    {
+      "Name": "my-bundle-three",
+      "Files": [
+        "my-bundle-one",
+        "source_files/test_three.js"
+      ]
+    },
+    {
+      "Name": "my-bundle-four",
+      "Files": [
+        "source_files/test_three.js"
+      ]
+    }
+  ]
