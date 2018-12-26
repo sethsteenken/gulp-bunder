@@ -53,10 +53,6 @@ function Bundle(config, bunderSettings, outputBasePath) {
         throw new PluginError(PLUGIN_NAME, "Extension not determined on bundle definition. Provide OutputFileName or at least one file in Files list with a valid file extension.");
     }
 
-    console.log("config.OutputFileName", config.OutputFileName);
-    console.log("config.Files[0]", config.Files[0]);
-    console.log("_ext", _ext);
-
     this.Extension = _ext.toLowerCase();
     this.Name = config.Name;
     this.OutputFileName = config.OutputFileName || this.Name.replace(" ", "_") + ".min." + this.Extension;
@@ -132,7 +128,7 @@ function BundleFiles(bundles, basePath, newerOnly) {
         console.log("Bundle count: " + totalBundleCount);
 
         for (let i = 0; i < totalBundleCount; i++) {
-            let bundle = bundles[i];
+            let gulpTask, bundle = bundles[i];
             
             console.log("bundle.Extension", bundle.Extension);
 
@@ -141,7 +137,7 @@ function BundleFiles(bundles, basePath, newerOnly) {
 
                 if (bundle.StaticOutputPath) {
                     (function (bundle) {
-                        let gulpTask = gulp.src(basePath + bundle.StaticOutputPath, { base: "." })
+                        gulpTask = gulp.src(basePath + bundle.StaticOutputPath, { base: "." })
                             .on("end", function () {
                                 console.log("Bundle " + bundle.Name + " marked as have a *static output* of '" + bundle.StaticOutputPath + "'. It will have it's static output copied to destination.");
                             })
@@ -159,8 +155,9 @@ function BundleFiles(bundles, basePath, newerOnly) {
                 continue;
             }
 
-            let files = BuildListOfFiles(bundle, bundles, basePath),
-                gulpTask = gulp.src(files, { base: "." });
+            let files = BuildListOfFiles(bundle, bundles, basePath);
+            
+            gulpTask = gulp.src(files, { base: "." });
 
             if (newerOnly) {
                 gulpTask = gulpTask.pipe(newer(bundle.OutputPath));
@@ -191,10 +188,10 @@ function BundleFiles(bundles, basePath, newerOnly) {
     }
 }
 
-function CleanOutputDirectories() {
-    if (bunderSettings && bunderSettings.OutputDirectories) {
-        for (var ext in bunderSettings.OutputDirectories) {
-            Clean(bunderSettings.OutputDirectories[ext]);
+function CleanOutputDirectories(directories) {
+    if (directories && directories.length) {
+        for (var ext in directories) {
+            Clean(directories[ext]);
         }
     }
 }
@@ -220,12 +217,15 @@ module.exports = function(options) {
     }
 
     if (!options.bunderSettings) {
-        //"./appsettings.json"
         options.bunderSettings = require(options.appSettingsJsonPath).Bunder;
     }
 
     if (!options.basePath) {
         options.basePath = "./";
+    }
+
+    if (ToBool(options.cleanOutput)) {
+        CleanOutputDirectories(options.bunderSettings.OutputDirectories);
     }
 
     let bundleConfigs = require(options.bunderSettings.BundlesConfigFilePath),
