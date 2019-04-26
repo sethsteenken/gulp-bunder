@@ -1,6 +1,6 @@
 {
   "name": "gulp-bunder",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "Bundle and minify static assets from json configuration",
   "homepage": "https://github.com/sethsteenken/gulp-bunder",
   "author": {
