@@ -6,7 +6,8 @@ let gulp = require("gulp"),
     uglify = require("gulp-uglify"),
     newer = require("gulp-newer"),
     del = require('del'),
-    PluginError = require('plugin-error');
+    PluginError = require('plugin-error'),
+    path = require('path');
 
 let PLUGIN_NAME = 'gulp-bunder';
 
@@ -130,8 +131,6 @@ function BundleFiles(bundles, basePath, newerOnly) {
         for (let i = 0; i < totalBundleCount; i++) {
             let gulpTask, bundle = bundles[i];
             
-            console.log("bundle.Extension", bundle.Extension);
-
             if (ToBool(bundle.ReferenceOnly)) {
                 console.log("Bundle for " + bundle.Name + " is set to only be referenced. No bundling for this bundle.");
 
@@ -188,23 +187,18 @@ function BundleFiles(bundles, basePath, newerOnly) {
     }
 }
 
-function CleanOutputDirectories(directories) {
-    if (directories && directories.length) {
+function CleanOutputDirectories(baseDir, directories) {
+    if (directories) {
         for (var ext in directories) {
-            Clean(directories[ext]);
+            Clean(path.join(baseDir, directories[ext]));
         }
     }
 }
 
 function Clean(dir) {
-    gulp.src(dir, { read: false })
-        .on("end", function () {
-            console.log("* Cleaning destintation '" + dir + "'... *");
-        })
-        .pipe(del([ dir + "/**/*" ]))
-        .on("end", function () {
-            console.log("* Cleaning complete. *");
-        });
+    console.log("* Cleaning output directory '" + dir + "'... *");
+    del([dir + "/**/*"]);
+    console.log("* Cleaning complete. *");
 }
 
 module.exports = function(options) {
@@ -216,19 +210,23 @@ module.exports = function(options) {
         throw new PluginError(PLUGIN_NAME, "Options values bunderSettings or appSettingsJsonPath required.");
     }
 
+    let executingDirectory = process.cwd();
+
     if (!options.bunderSettings) {
-        options.bunderSettings = require(options.appSettingsJsonPath).Bunder;
+        options.bunderSettings = require(path.join(executingDirectory, options.appSettingsJsonPath)).Bunder;
     }
 
     if (!options.basePath) {
         options.basePath = "./";
     }
 
+    options.basePath = path.join(executingDirectory, options.basePath);
+
     if (ToBool(options.cleanOutput)) {
-        CleanOutputDirectories(options.bunderSettings.OutputDirectories);
+        CleanOutputDirectories(options.basePath, options.bunderSettings.OutputDirectories);
     }
 
-    let bundleConfigs = require(options.bunderSettings.BundlesConfigFilePath),
+    let bundleConfigs = require(path.join(executingDirectory, options.bunderSettings.BundlesConfigFilePath)),
         bundles = bundleConfigs.map(function (item) {
             return new Bundle(item, options.bunderSettings, options.basePath);
         });

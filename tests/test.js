@@ -2,7 +2,9 @@ var bunder = require("../index.js");
 
 bunder({
     basePath: "./wwwroot/",
-    appSettingsJsonPath: "./tests/appsettings.json"
+    appSettingsJsonPath: "./appsettings.json",
+    cleanOutput: false,
+    newerOnly: true
 });
 
 /*
@@ -11,7 +13,7 @@ bunder({
     bunderSettings: {
         "UseBundledOutput": true,
         "UseVersioning": true,
-        "BundlesConfigFilePath": "./tests/bundles.json",
+        "BundlesConfigFilePath": "bundles.json",
         "OutputDirectories": {
           "js": "/output/js",
           "css": "/output/css"
