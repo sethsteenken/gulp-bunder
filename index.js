@@ -3,7 +3,7 @@
 let gulp = require("gulp"),
     concat = require("gulp-concat"),
     cssmin = require("gulp-cssmin"),
-    uglify = require("gulp-uglify"),
+    minify = require("gulp-minify"),
     newer = require("gulp-newer"),
     del = require('del'),
     PluginError = require('plugin-error'),
@@ -77,7 +77,7 @@ function Bundle(config, bunderSettings, outputBasePath) {
     this.Minify = function () {
         switch (this.Extension) {
             case "js":
-                return uglify();
+                return minify();
             case "css":
                 return cssmin();
             default:
