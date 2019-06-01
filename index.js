@@ -7,7 +7,8 @@ let gulp = require("gulp"),
     newer = require("gulp-newer"),
     del = require('del'),
     PluginError = require('plugin-error'),
-    path = require('path');
+    path = require('path'),
+    logEnabled = false;
 
 let PLUGIN_NAME = 'gulp-bunder';
 
@@ -121,30 +122,30 @@ function BuildListOfFiles(bundle, bundlesList, sourceBasePath) {
 
 function BundleFiles(bundles, basePath, newerOnly) {
     if (bundles && bundles.length) {
-        console.log("*** Starting bundling. Newer Only: " + newerOnly + " ***");
+        Log("*** Starting bundling. Newer Only: " + newerOnly + " ***");
 
         let completedCount = 0,
             totalBundleCount = bundles.length;
 
-        console.log("Bundle count: " + totalBundleCount);
+        Log("Bundle count: " + totalBundleCount);
 
         for (let i = 0; i < totalBundleCount; i++) {
             let gulpTask, bundle = bundles[i];
             
             if (ToBool(bundle.ReferenceOnly)) {
-                console.log("Bundle for " + bundle.Name + " is set to only be referenced. No bundling for this bundle.");
+                Log("Bundle for " + bundle.Name + " is set to only be referenced. No bundling for this bundle.");
 
                 if (bundle.StaticOutputPath) {
                     (function (bundle) {
                         gulpTask = gulp.src(basePath + bundle.StaticOutputPath, { base: "." })
                             .on("end", function () {
-                                console.log("Bundle " + bundle.Name + " marked as have a *static output* of '" + bundle.StaticOutputPath + "'. It will have it's static output copied to destination.");
+                                Log("Bundle " + bundle.Name + " marked as have a *static output* of '" + bundle.StaticOutputPath + "'. It will have it's static output copied to destination.");
                             })
                             .pipe(bundle.Concat())
                             .pipe(gulp.dest("."))
                             .on("end", function () {
                                 completedCount++;
-                                console.log("Static Output '" + bundle.StaticOutputPath + "' copied to '" + bundle.OutputPath + "'.")
+                                Log("Static Output '" + bundle.StaticOutputPath + "' copied to '" + bundle.OutputPath + "'.")
                             });
                     })(bundle);
                 } else {
@@ -165,9 +166,9 @@ function BundleFiles(bundles, basePath, newerOnly) {
             (function (bundle, files) {
                 gulpTask
                     .on("end", function () {
-                        console.log("Bundling " + bundle.Name + " ... ");
+                        Log("Bundling " + bundle.Name + " ... ");
                         for (let i = 0; i < files.length; i++) {
-                            console.log(" - Includes file " + files[i] + ".");
+                            Log(" - Includes file " + files[i] + ".");
                         }
                     })
                     .pipe(bundle.Concat())
@@ -177,13 +178,13 @@ function BundleFiles(bundles, basePath, newerOnly) {
                         completedCount++
 
                         if (completedCount == totalBundleCount) {
-                            console.log("*** Bundling process complete. ***");
+                            Log("*** Bundling process complete. ***");
                         }
                     });
             })(bundle, files);
         }
     } else {
-        console.log("No bundles found.");
+        Log("No bundles found.");
     }
 }
 
@@ -196,9 +197,15 @@ function CleanOutputDirectories(baseDir, directories) {
 }
 
 function Clean(dir) {
-    console.log("* Cleaning output directory '" + dir + "'... *");
+    Log("* Cleaning output directory '" + dir + "'... *");
     del([dir + "/**/*"]);
-    console.log("* Cleaning complete. *");
+    Log("* Cleaning complete. *");
+}
+
+function Log(message) {
+    if (logEnabled) {
+        console.Log(message);
+    }
 }
 
 module.exports = function(options) {
@@ -221,6 +228,7 @@ module.exports = function(options) {
     }
 
     options.basePath = path.join(executingDirectory, options.basePath);
+    logEnabled = options.logEnabled === true;
 
     if (ToBool(options.cleanOutput)) {
         CleanOutputDirectories(options.basePath, options.bunderSettings.OutputDirectories);
