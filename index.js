@@ -204,7 +204,7 @@ function Clean(dir) {
 
 function Log(message) {
     if (logEnabled) {
-        console.Log(message);
+        console.log(message);
     }
 }
 
@@ -234,10 +234,15 @@ module.exports = function(options) {
         CleanOutputDirectories(options.basePath, options.bunderSettings.OutputDirectories);
     }
 
-    let bundleConfigs = require(path.join(executingDirectory, options.bunderSettings.BundlesConfigFilePath)),
-        bundles = bundleConfigs.map(function (item) {
-            return new Bundle(item, options.bunderSettings, options.basePath);
-        });
+    let bundleConfigPath = path.join(executingDirectory, options.bunderSettings.BundlesConfigFilePath);
+    let bundleConfigs = require(bundleConfigPath);
+    if (toString.call(bundleConfigs) !== "[object Array]") {
+        throw new PluginError(PLUGIN_NAME, "Bundle configuration invalid. Root configuration at " + bundleConfigPath + " must be an array.");
+    }
+
+    let bundles = bundleConfigs.map(function (item) {
+        return new Bundle(item, options.bunderSettings, options.basePath);
+    });
 
     BundleFiles(bundles, options.basePath, ToBool(options.newerOnly));
 }

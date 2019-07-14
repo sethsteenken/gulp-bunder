@@ -4,7 +4,8 @@ bunder({
     basePath: "./wwwroot/",
     appSettingsJsonPath: "./appsettings.json",
     cleanOutput: false,
-    newerOnly: true
+    newerOnly: true,
+    logEnabled: true
 });
 
 /*
